@@ -1,32 +1,76 @@
+
+
+<!DOCTYPE html>
 <html>
-  <head>
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script>
-      function start() {
-        // Initializes the client with the API key and the Translate API.
-        gapi.client.init({
+<head>
+  <title>Embed API Demo</title>
+</head>
+<body>
+
+<!-- Step 1: Create the containing elements. -->
+
+<section id="auth-button"></section>
+<section id="view-selector"></section>
+<section id="timeline"></section>
+
+<!-- Step 2: Load the library. -->
+
+<script>
+(function(w,d,s,g,js,fjs){
+  g=w.gapi||(w.gapi={});g.analytics={q:[],ready:function(cb){this.q.push(cb)}};
+  js=d.createElement(s);fjs=d.getElementsByTagName(s)[0];
+  js.src='https://apis.google.com/js/platform.js';
+  fjs.parentNode.insertBefore(js,fjs);js.onload=function(){g.load('analytics')};
+}(window,document,'script'));
+</script>
+
+<script>
+gapi.analytics.ready(function() {
+
+  // Step 3: Authorize the user.
+
+  api.client.init({
           'apiKey': 'AIzaSyCTesFyWAw8E4NeEntL8odovnsIB_e4tfU',
           'discoveryDocs': ['https://www.googleapis.com/discovery/v1/apis/translate/v2/rest'],
-        }).then(function() {
-          // Executes an API request, and returns a Promise.
-          // The method name `language.translations.list` comes from the API discovery.
-          return gapi.client.language.translations.list({
-            q: 'hello world',
-            source: 'en',
-            target: 'de',
-          });
-        }).then(function(response) {
-          console.log(response.result.data.translations[0].translatedText);
-        }, function(reason) {
-          console.log('Error: ' + reason.result.error.message);
-        });
-      };
+        })
 
-      // Loads the JavaScript client library and invokes `start` afterwards.
-      gapi.load('client', start);
-    </script>
-  </head>
-  <body>
-    <div id="results"></div>
-  </body>
+  // Step 4: Create the view selector.
+
+  var viewSelector = new gapi.analytics.ViewSelector({
+    container: 'view-selector'
+  });
+
+  // Step 5: Create the timeline chart.
+
+  var timeline = new gapi.analytics.googleCharts.DataChart({
+    reportType: 'ga',
+    query: {
+      'dimensions': 'ga:date',
+      'metrics': 'ga:sessions',
+      'start-date': '30daysAgo',
+      'end-date': 'yesterday',
+    },
+    chart: {
+      type: 'LINE',
+      container: 'timeline'
+    }
+  });
+
+  // Step 6: Hook up the components to work together.
+
+  gapi.analytics.auth.on('success', function(response) {
+    viewSelector.execute();
+  });
+
+  viewSelector.on('change', function(ids) {
+    var newIds = {
+      query: {
+        ids: ids
+      }
+    }
+    timeline.set(newIds).execute();
+  });
+});
+</script>
+</body>
 </html>
